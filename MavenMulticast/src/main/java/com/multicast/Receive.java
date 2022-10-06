@@ -6,7 +6,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.HashMap;
 
-public class Receive extends Thread{
+public class Receive implements Runnable{
 
     private String ptr_message = "Hello1000255.255.255.255";
     private InetAddress group;
