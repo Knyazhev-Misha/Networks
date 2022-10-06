@@ -7,11 +7,12 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            InetAddress group = InetAddress.getByName("225.6.7.8");
+            InetAddress group = InetAddress.getByName(args[0]);
             MulticastSocket socket = new MulticastSocket(3456);
             socket.joinGroup(group);
             Receive receive = new Receive(group, socket);
-            receive.start();
+            Thread thread = new Thread(receive);
+            thread.start();
 
             socket = new MulticastSocket();
             socket.joinGroup(group);
