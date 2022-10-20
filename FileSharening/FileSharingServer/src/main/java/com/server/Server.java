@@ -15,8 +15,10 @@ public class Server {
     public Server(int port){
            try {
                 server = new ServerSocket(port);
+                Main.log.info("Start server");
            } catch (IOException e) {
-                     e.printStackTrace();
+               Main.log.error("Sever can't start");
+               System.exit(0);
            }
 
            createDir();
@@ -28,21 +30,25 @@ public class Server {
         dir = dir + "\\uploads";
         File theDir = new File(dir);
         if (!theDir.exists()){
+            Main.log.info("create dir uploads");
             theDir.mkdirs();
         }
     }
 
     private void connectClient(){
-        int run = 1;
         ExecutorService thread = Executors.newFixedThreadPool(4);
         while (true) {
             try {
                 socket = server.accept();
+
+                String ip = socket.getInetAddress().toString();
+                ip = ip.substring(1, ip.length());
+
+                Main.log.info("Connect: " + ip);
                 thread.submit(new ServerClient(socket, dir));
             } catch (IOException e) {
-                System.out.println("Can't create connection");
+                Main.log.info("Can't create connection");
             }
         }
     }
-
 }

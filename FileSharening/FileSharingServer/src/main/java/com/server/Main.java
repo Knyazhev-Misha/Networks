@@ -1,12 +1,23 @@
 package com.server;
-
-import java.io.*;
+import org.apache.log4j.Logger;
 
 
 public class Main {
+    public static final Logger log = Logger.getLogger(Main.class);
+
     public static void main(String[] args) {
-        int port = 4444;
-        //int port = Integer.parseInt(args[0]);
-        Server server = new Server(port);
+       String port = args[0];
+        try {
+            int inPort = Integer.parseInt(port);
+            if (inPort > 65535) {
+                Main.log.info("Incorrect port, computer have < 65536 ports");
+                System.exit(0);
+            }
+
+            Server server = new Server(inPort);
+        } catch (NumberFormatException e) {
+            Main.log.error("Incorrect port, have symbol");
+            System.exit(0);
+        }
     }
 }

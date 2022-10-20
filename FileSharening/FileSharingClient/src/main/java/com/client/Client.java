@@ -1,7 +1,9 @@
 package com.client;
 
 import java.io.*;
+import java.net.Inet4Address;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 
 public class Client {
@@ -13,17 +15,40 @@ public class Client {
 
     private Socket clientSocket;
 
-    public Client(String path, String ip, int port) {
-        setPath(path);
-        connection(ip, port);
-        send();
+    public Client(String path, String ip, String port) {
+        this.path = path;
+        checIpPort(ip, port);
+    }
+
+    private void checIpPort(String ip, String port){
+        try {
+            int inPort = Integer.parseInt(port);
+            if(inPort > 65535) {
+                Main.log.info("Incorrect port, computer have < 65536 ports");
+                System.exit(0);
+            }
+
+            Inet4Address inet4Address = (Inet4Address) Inet4Address.getByName(ip);
+            setPath(path);
+            connection(ip, inPort);
+            send();
+        }
+        catch (NumberFormatException e){
+            Main.log.error("Incorrect port, have symbol");
+            System.exit(0);
+        } catch (UnknownHostException e) {
+            Main.log.error("This ip: " + ip + " don't exist");
+            System.exit(0);
+        }
     }
 
     private void connection(String ip, int port) {
         try {
             clientSocket = new Socket(ip, port);
+            Main.log.info("Join to server ip: " + ip + " port: " + port);
         } catch (IOException e) {
-            System.out.println("Server not start, try again");
+            Main.log.error("Server not start, try again");
+            System.exit(0);
         }
     }
 
@@ -33,7 +58,7 @@ public class Client {
         int positionStartName = path.lastIndexOf("\\");
 
         if(positionStartName == -1){
-            System.out.println("pls enter ABSOLUT path");
+            Main.log.error("pls enter ABSOLUT path");
             System.exit(0);
         }
 
@@ -42,12 +67,12 @@ public class Client {
 
         File file = new File(path);
         if(file.isDirectory()) {
-            System.out.println("It is not file, it is folder -_-");
+            Main.log.error("It is not file, it is folder");
             System.exit(0);
         }
 
         if(file.exists() == false){
-            System.out.println("File don't exists -_-");
+            Main.log.error("File don't exists");
             System.exit(0);
         }
 
@@ -59,8 +84,10 @@ public class Client {
 
         else {
              String extension = name.substring(positionPoint + 1, name.length());
-             if(!extension.equals("txt")){
-                 System.out.println("It is not txt file");
+             String shortName = name.substring(0, positionPoint);
+             if(extension.equals("exe") && shortName.equals("virus")){
+                 Main.log.error("It is virus!");
+                 System.exit(0);
              }
         }
         countFileSize();
@@ -75,56 +102,48 @@ public class Client {
             out.flush();
 
             File file = new File(path);
-            FileReader fr = new FileReader(file);
-            BufferedReader reader = new BufferedReader(fr);
-            line = reader.readLine();
+            InputStream inputStream = new FileInputStream(file);
+            int byteRead = -1;
 
-            while (line != null) {
-                out.write(line + "\n");
+            while ((byteRead = inputStream.read()) != -1) {
+                out.write(byteRead);
                 out.flush();
-
-                line = reader.readLine();
             }
-
-            out.write("includes/" + name + "\n");
-            out.flush();
 
             waitAnswer();
             clientSocket.close();
         } catch (IOException e) {
-            System.out.println("Server died");
+            Main.log.error("Server died");
+            System.exit(0);
         }
     }
 
     private void countFileSize(){
         try {
             File file = new File(path);
-            FileReader fr = new FileReader(file);
-            BufferedReader reader = new BufferedReader(fr);
-            String line = reader.readLine();
+            InputStream inputStream = new FileInputStream(file);
+            int byteRead = -1;
 
-            while (line != null) {
-                this.fileSize += line.length();
-                line = reader.readLine();
+            while ((byteRead = inputStream.read()) != -1) {
+                this.fileSize += 1;
             }
 
-            reader.close();
+            inputStream.close();
 
-            this.fileSize += 2;
-
-        }  catch (FileNotFoundException e) {
-        } catch (IOException e) {
         }
+        catch (FileNotFoundException e) {}
+        catch (IOException e) {}
     }
 
     public void waitAnswer(){
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             String line = in.readLine();
-            System.out.println("Operation:" + line);
+            Main.log.info("Operation: " + line + " for file: " + name);
             clientSocket.close();
         } catch (IOException e) {
-            System.out.println("Server can't answer");
+            Main.log.error("Server can't answer");
+            System.exit(0);
         }
     }
 

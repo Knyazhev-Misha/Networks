@@ -13,8 +13,6 @@ public class ServerClient implements Runnable{
     private int fileSize;
     private int checkSize;
 
-    private double startTime;
-
     private String name;
     private String dir;
     private String path;
@@ -27,12 +25,7 @@ public class ServerClient implements Runnable{
 
 
     @Override
-    public void run() {
-        connectClient();
-    }
-
-
-    private void connectClient(){
+    public void run(){
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
@@ -58,14 +51,19 @@ public class ServerClient implements Runnable{
                 file.delete();
             }
 
+            String ip = socket.getInetAddress().toString();
+            ip = ip.substring(1, ip.length());
+
+            Main.log.info("Client: " + ip + " disconnect");
             socket.close();
 
         } catch (IOException e) {
             if(name != null) {
-                System.out.println("Client with:" + name + "died, speed 0");
+                Main.log.error("Client with:" + name + "died, speed 0");
             }
             else {
-                System.out.println("Unknow client died, speed 0");
+
+                Main.log.error("Unknow client died, speed 0");
             }
         }
     }
@@ -79,44 +77,47 @@ public class ServerClient implements Runnable{
             }
 
             File file = new File(path);
-            FileWriter fr = new FileWriter(file);
-            BufferedWriter out = new BufferedWriter(fr);
+            OutputStream out = new FileOutputStream(file);
 
-            startTime = System.currentTimeMillis();
-            String line = in.readLine();
-            int length = line.length();
+            double startTime = System.currentTimeMillis();
+            double currentTime;
+            int byteRead = -1;
+            int length = 0;
+            int lenght_speed = 0;
 
-            while (!line.equals("includes/" + name)){
+            while (length < fileSize){
 
-                if(((System.currentTimeMillis() - startTime) / 1000) - 3.0 > 0.000000000001) {
-                    System.out.println("speed: " + name + " is: " + (double) length / 3.0);
+                currentTime = (System.currentTimeMillis() - startTime) / 1000;
+                if(currentTime - 3.0 > 0.000000000001 && length > 0) {
+                    Main.log.info("speed: " + name + " is: " + (double) lenght_speed / currentTime +".byte");
                     startTime = System.currentTimeMillis();
+                    lenght_speed = 0;
                 }
 
-                line = line + "\n";
-                out.write(line);
-                line = in.readLine();
-                length += line.length();
+                byteRead = in.read();
+                out.write(byteRead);
+                length += 1;
+                lenght_speed += 1;
 
             }
+
+            Main.log.info("File read: " + name + " file size: " + fileSize);
             out.close();
-        } catch (IOException e) {}
+        } catch (IOException e) {
+            Main.log.error("Can't read file:" + name);
+        }
     }
 
     private void checkLength(){
         try {
             File file = new File(path);
-            FileReader fr = new FileReader(file);
-            BufferedReader reader = new BufferedReader(fr);
-            String line = reader.readLine();
+            InputStream inputStream = new FileInputStream(file);
+            int byteRead = -1;
 
-            while (line != null) {
-                checkSize += line.length();
-                line = reader.readLine();
+            while ((byteRead = inputStream.read()) != -1) {
+                checkSize += 1;
             }
-
-            checkSize += 2;
-
+            inputStream.close();
         }  catch (FileNotFoundException e) {} catch (IOException e) {}
     }
 }
