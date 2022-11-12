@@ -1,5 +1,6 @@
 package com.api.request;
 
+import com.api.Json.JsonInteresting.Interesting;
 import com.api.Json.JsonPlace.Place;
 import com.google.gson.Gson;
 import okhttp3.OkHttpClient;
@@ -10,19 +11,24 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-public class RequestPlace {
-
+public class RequestInteresting {
     private String api_key;
 
-    public RequestPlace(){
+    public RequestInteresting(){
         getApiKey();
     }
 
-     public Place request(String location)  {
+
+    public Interesting request(String lat, String lon)  {
         try {
+            String lon_max = Double.toString(Double.parseDouble(lon) + 0.1);
+            String lat_max = Double.toString(Double.parseDouble(lat) + 0.1);
+
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
-                    .url("https://graphhopper.com/api/1/geocode?&locale=en&q=" + location + "&key=" + api_key)
+                    .url("http://api.opentripmap.com/0.1/ru/places/bbox?lon_min=" + lon
+                            + "&lat_min=" + lat + "&lon_max=" + lon_max + "&lat_max=" +
+                            lat_max + "&format=geojson&apikey=" + api_key)
                     .build();
 
             Response response = null;
@@ -30,16 +36,16 @@ public class RequestPlace {
             response = client.newCall(request).execute();
 
             Gson g = new Gson();
-            Place place = g.fromJson(response.body().string(), Place.class);
+            Interesting interesting = g.fromJson(response.body().string(), Interesting.class);
 
-            return place;
+            return interesting;
         }
         catch (IOException e) {
             return null;
         }
     }
 
-    private void getApiKey(){
+    private void getApiKey() {
         FileInputStream fis;
         Properties property = new Properties();
 
@@ -47,10 +53,11 @@ public class RequestPlace {
             fis = new FileInputStream("src/main/resources/api_key.properties");
             property.load(fis);
 
-            api_key = property.getProperty("api_key_place");
+            api_key = property.getProperty("api_key_interesting");
             fis.close();
         } catch (IOException e) {
-            System.err.println("Key place don't exist");
+            System.err.println("Key interesting don't exist");
         }
     }
+
 }

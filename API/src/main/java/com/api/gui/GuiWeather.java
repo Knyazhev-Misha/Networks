@@ -1,6 +1,6 @@
 package com.api.gui;
 
-import com.api.JsonWeather.Weath;
+import com.api.Json.JsonWeather.Weath;
 import com.api.request.RequestWeather;
 
 import javax.swing.*;
@@ -29,29 +29,34 @@ public class GuiWeather {
 
        createPanel();
        createFrame();
-       createBack();
        createWeather();
+       createBack();
 
     }
 
     private void createPanel(){
+        Runnable task = () -> {
+            mainPanel = new JPanel(new BorderLayout());
+            mainPanel.setPreferredSize(new Dimension(placeFrame.getWidth(), placeFrame.getHeight()));
 
-        mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setPreferredSize( new Dimension(placeFrame.getWidth(), placeFrame.getHeight()));
+            weatherPanel = new JPanel(new BorderLayout());
 
-        weatherPanel = new JPanel(new BorderLayout());
-
-        backPanel = new JPanel(new BorderLayout());
+            backPanel = new JPanel(new BorderLayout());
+        };
+        SwingUtilities.invokeLater(task);
     }
 
     private void createFrame(){
-        mainFrame = new JFrame();
-        mainFrame.add(mainPanel);
-        mainFrame.setTitle("Weather");
-        mainFrame.pack();
-        mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        mainFrame.setLocation(placeFrame.getLocation());
-        mainFrame.setVisible(true);
+        Runnable task = () -> {
+            mainFrame = new JFrame();
+            mainFrame.add(mainPanel);
+            mainFrame.setTitle("Weather");
+            mainFrame.pack();
+            mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            mainFrame.setLocation(placeFrame.getLocation());
+            mainFrame.setVisible(true);
+        };
+        SwingUtilities.invokeLater(task);
     }
 
     private void createWeather(){

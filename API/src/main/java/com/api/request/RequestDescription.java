@@ -1,6 +1,6 @@
 package com.api.request;
 
-import com.api.Json.JsonPlace.Place;
+import com.api.Json.JsonDescription.Description;
 import com.google.gson.Gson;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -10,19 +10,20 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-public class RequestPlace {
-
+public class RequestDescription {
     private String api_key;
 
-    public RequestPlace(){
+    public RequestDescription(){
         getApiKey();
     }
 
-     public Place request(String location)  {
+
+    public Description request(String id)  {
         try {
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
-                    .url("https://graphhopper.com/api/1/geocode?&locale=en&q=" + location + "&key=" + api_key)
+                    .url("http://api.opentripmap.com/0.1/ru/places/xid/"+ id +
+                            "?format=geojson&apikey=" + api_key)
                     .build();
 
             Response response = null;
@@ -30,16 +31,16 @@ public class RequestPlace {
             response = client.newCall(request).execute();
 
             Gson g = new Gson();
-            Place place = g.fromJson(response.body().string(), Place.class);
+            Description description = g.fromJson(response.body().string(), Description.class);
 
-            return place;
+            return description;
         }
         catch (IOException e) {
             return null;
         }
     }
 
-    private void getApiKey(){
+    private void getApiKey() {
         FileInputStream fis;
         Properties property = new Properties();
 
@@ -47,10 +48,10 @@ public class RequestPlace {
             fis = new FileInputStream("src/main/resources/api_key.properties");
             property.load(fis);
 
-            api_key = property.getProperty("api_key_place");
+            api_key = property.getProperty("api_key_interesting");
             fis.close();
         } catch (IOException e) {
-            System.err.println("Key place don't exist");
+            System.err.println("Key interesting don't exist");
         }
     }
 }
